@@ -313,6 +313,8 @@
 <!-- Firebase (compat SDK, no bundler needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 
 <!-- Cloudflare Web Analytics -->
   <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6f746f233c5c4e87a7410c11062fb48c"}'></script>
@@ -606,15 +608,61 @@
 
       let db = null;
       let boardRef = null;
-      let firebaseReady = false;
+      let firebaseReady = false;   // Firebase SDK initialized
+      let writeReady = false;      // signed in + allowed to write
+      let uid = null;
+
+      // Minimum ms between writes this client will even attempt (paired with a
+      // matching server-side rate limit in the security rules, see below).
+      const MIN_WRITE_INTERVAL_MS = 150;
+      let lastWriteAt = 0;
 
       try{
         firebase.initializeApp(firebaseConfig);
+
+        // App Check: proves requests are coming from this real page, not a
+        // script hitting the database URL directly. Replace RECAPTCHA_V3_SITE_KEY
+        // with the key you register in Firebase Console > App Check.
+        firebase.appCheck().activate('RECAPTCHA_V3_SITE_KEY', true);
+
         db = firebase.database();
         boardRef = db.ref('board');
         firebaseReady = true;
+
+        // Anonymous auth: gives every visitor a stable uid so rules can rate-limit
+        // per-visitor instead of per-IP (which doesn't work well behind Cloudflare/NAT).
+        firebase.auth().onAuthStateChanged(user => {
+          if(user){
+            uid = user.uid;
+            writeReady = true;
+          } else {
+            writeReady = false;
+          }
+        });
+        firebase.auth().signInAnonymously().catch(err => {
+          console.warn('Anonymous sign-in failed, board will be read-only:', err);
+        });
       }catch(e){
         console.warn('Firebase unavailable, board will not sync:', e);
+      }
+
+      // Writes a pixel (or a whole-board clear) together with a server-timestamp
+      // "heartbeat" at meta/lastWrite/<uid> in one atomic multi-path update.
+      // The security rules require this heartbeat to be present and to be at
+      // least MIN_WRITE_INTERVAL_MS newer than the previous one, so rapid-fire
+      // writes from a bot/script get rejected server-side even if they skip the
+      // client entirely.
+      function commitBoardUpdate(pixelUpdates){
+        if(!firebaseReady || !writeReady) return;
+        const now = Date.now();
+        if(now - lastWriteAt < MIN_WRITE_INTERVAL_MS) return;
+        lastWriteAt = now;
+
+        const updates = {};
+        Object.keys(pixelUpdates).forEach(i => { updates['board/' + i] = pixelUpdates[i]; });
+        updates['meta/lastWrite/' + uid] = firebase.database.ServerValue.TIMESTAMP;
+
+        db.ref().update(updates).catch(err => console.error('Write rejected:', err));
       }
 
       function render(){
@@ -646,9 +694,7 @@
         if(grid[i] !== activeColor){
           grid[i] = activeColor;
           render();
-          if(firebaseReady){
-            boardRef.child(String(i)).set(activeColor);
-          }
+          commitBoardUpdate({ [i]: activeColor });
         }
       }
 
@@ -678,11 +724,9 @@
       clearBtn.addEventListener('click', () => {
         grid = new Array(COLS * ROWS).fill(null);
         render();
-        if(firebaseReady){
-          const updates = {};
-          for(let i=0;i<COLS*ROWS;i++) updates[i] = null;
-          boardRef.update(updates);
-        }
+        const updates = {};
+        for(let i=0;i<COLS*ROWS;i++) updates[i] = null;
+        commitBoardUpdate(updates);
       });
 
       if(firebaseReady){
