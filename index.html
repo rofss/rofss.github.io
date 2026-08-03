@@ -582,7 +582,7 @@
     const initial = saved || (navigator.language && navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en');
     applyLang(initial);
 
-    // ---------- interactive pixel board (synced via Firebase Realtime Database) ----------
+// ---------- interactive pixel board (synced via Firebase Realtime Database) ----------
     (function(){
       const canvas = document.getElementById('pixelCanvas');
       if(!canvas) return;
@@ -647,7 +647,7 @@
           grid[i] = activeColor;
           render();
           if(firebaseReady){
-            boardRef.child(String(i)).set(activeColor);
+            boardRef.child(String(i)).set(activeColor).catch(err => console.error('Paint failed:', err));
           }
         }
       }
@@ -681,7 +681,7 @@
         if(firebaseReady){
           const updates = {};
           for(let i=0;i<COLS*ROWS;i++) updates[i] = null;
-          boardRef.update(updates);
+          boardRef.update(updates).catch(err => console.error('Clear failed:', err));
         }
       });
 
@@ -710,7 +710,7 @@
       } else {
         render();
       }
-    })();
+    })();})();
   </script>
 
 </body>
