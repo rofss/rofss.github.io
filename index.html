@@ -679,7 +679,11 @@
       clearBtn.addEventListener('click', () => {
         grid = new Array(COLS * ROWS).fill(null);
         render();
-        if(firebaseReady) boardRef.set(null);
+        if(firebaseReady){
+          const updates = {};
+          for(let i=0;i<COLS*ROWS;i++) updates[i] = null;
+          boardRef.update(updates);
+        }
       });
 
       if(firebaseReady){
