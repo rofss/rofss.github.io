@@ -143,18 +143,50 @@
     background-size:16px 16px;
     background-color:#0C0D0F;
     position:relative;
-    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
   }
   .canvas-grid .px{position:absolute;background:var(--accent);}
   .canvas-mock-text{
     font-family:var(--mono);font-size:10px;color:var(--text-2);
     position:absolute;bottom:10px;left:14px;
+    pointer-events:none;
   }
+
+  /* ---------- interactive pixel board ---------- */
+  #pixelCanvas{
+    display:block;width:100%;height:100%;
+    cursor:crosshair;
+    image-rendering:pixelated;
+  }
+  .board-toolbar{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding:10px 14px;
+    border-top:1px solid var(--line);
+    background:var(--bg-1);
+  }
+  .board-palette{display:flex;gap:6px;}
+  .board-swatch{
+    width:20px;height:20px;border-radius:4px;
+    border:1px solid var(--line);
+    cursor:pointer;
+    padding:0;
+    transition:transform .1s, box-shadow .1s;
+  }
+  .board-swatch:hover{transform:translateY(-1px);}
+  .board-swatch.active{box-shadow:0 0 0 2px var(--bg-1),0 0 0 3px var(--text-0);}
+  .board-actions{display:flex;gap:8px;}
+  .board-btn{
+    font-family:var(--mono);font-size:11px;color:var(--text-1);
+    background:transparent;border:1px solid var(--line);
+    padding:6px 10px;border-radius:var(--radius);
+    cursor:pointer;transition:border-color .15s,color .15s;
+  }
+  .board-btn:hover{border-color:var(--text-2);color:var(--text-0);}
 
   /* ---------- stats strip ---------- */
   .stats{
     max-width:1180px;margin:0 auto;
-    display:grid;grid-template-columns:repeat(4,1fr);
+    display:grid;grid-template-columns:repeat(2,1fr);
     border-bottom:1px solid var(--line);
   }
   .stat{
@@ -199,31 +231,65 @@
   .role h3{font-size:16px;margin-bottom:6px;}
   .role p{font-size:13px;color:var(--text-1);}
 
-  /* ---------- join panel ---------- */
-  .join{
-    background:linear-gradient(180deg,var(--bg-1),var(--bg-0));
-    border:1px solid var(--line);border-radius:6px;
-    padding:40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;
-  }
-  .join-copy{max-width:460px;}
-  .join h2{font-size:26px;font-weight:800;margin-bottom:10px;letter-spacing:-.01em;}
-  .join p{color:var(--text-1);font-size:14px;}
-  .join-action{display:flex;align-items:center;gap:20px;}
+  /* ---------- join / channels layout: each channel uses the invite-card layout ---------- */
+  .join-layout{display:flex;flex-direction:column;gap:20px;}
+
   .btn-join{
-    font-family:var(--mono);font-size:14px;font-weight:700;
+    font-family:var(--mono);font-size:13px;font-weight:700;
     background:var(--accent);color:#140900;
-    padding:16px 28px;border-radius:var(--radius);
+    padding:12px 18px;border-radius:var(--radius);
     letter-spacing:.02em;border:1px solid var(--accent);
     transition:box-shadow .15s, filter .15s;
-    white-space:nowrap;
+    white-space:nowrap;display:inline-block;
   }
   .btn-join:hover{box-shadow:0 0 0 4px var(--accent-glow);filter:brightness(1.05);}
-  .join-qr{
-    background:#fff;padding:8px;border-radius:6px;
-    display:flex;align-items:center;justify-content:center;
-    width:92px;height:92px;flex-shrink:0;
+  .btn-join.soon{
+    background:transparent;color:var(--text-2);border:1px dashed var(--line);
+    cursor:default;pointer-events:none;
   }
-  .join-qr img{width:100%;height:100%;display:block;}
+
+  .channel-icon{
+    width:40px;height:40px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .channel-icon svg{width:22px;height:22px;}
+
+  /* ---------- invite card (QR-first) — used for Wplace, Telegram, Discord ---------- */
+  .invite-card{
+    background:var(--bg-1);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:24px;
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:28px;
+  }
+  .invite-qr-wrap{
+    background:#fff;
+    border-radius:6px;
+    padding:20px;
+    aspect-ratio:1/1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .invite-qr-wrap img{width:100%;height:100%;object-fit:contain;display:block;}
+  .invite-qr-wrap.placeholder{
+    background:var(--bg-2);
+    border:1px dashed var(--line);
+    flex-direction:column;gap:6px;
+  }
+  .invite-qr-wrap.placeholder span{
+    font-family:var(--mono);font-size:11px;color:var(--text-2);text-align:center;
+  }
+  .invite-right{display:flex;flex-direction:column;justify-content:space-between;}
+  .invite-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .invite-text p{font-size:14px;color:var(--text-1);line-height:1.6;}
+  .invite-row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding-top:20px;border-top:1px dashed var(--line);margin-top:20px;
+  }
+  .invite-row .invite-title{font-size:13px;color:var(--text-2);font-family:var(--mono);}
+  .invite-row .invite-id{font-size:13px;color:var(--text-1);font-family:var(--mono);}
 
   /* ---------- footer ---------- */
   footer{
@@ -239,11 +305,17 @@
     .stats{grid-template-columns:1fr 1fr;}
     .stat:nth-child(2){border-right:none;}
     .roles{grid-template-columns:1fr;}
-    .join{grid-template-columns:1fr;}
+    .invite-card{grid-template-columns:1fr;}
     nav.links{display:none;}
     h1{font-size:38px;}
   }
 </style>
+<!-- Firebase (compat SDK, no bundler needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "YOUR_CLOUDFLARE_ANALYTICS_TOKEN"}'></script>
 </head>
 <body>
 
@@ -272,8 +344,8 @@
   <section class="hero" id="overview" style="border-bottom:none;padding-bottom:0;">
     <div>
       <div class="eyebrow" data-i18n="hero.eyebrow">Wplace · Alliance Registry</div>
-      <h1 data-i18n="hero.title">Territory is earned<br>one pixel at a time.</h1>
-      <p data-i18n="hero.body">ROFSS is a coordinated pixel-placement alliance operating on Wplace. We hold territory, defend art, and organize large-scale builds through structured shifts and a strict operating standard.</p>
+      <h1 data-i18n="hero.title">Memes, art, and zero obligation.</h1>
+      <p data-i18n="hero.body">While others wage brutal territory wars, ROFSS just draws for fun. Mutual support, joint builds, and total chill. No schedules, no shifts. Join if you're here to enjoy it, not to "serve."</p>
       <div class="hero-actions">
         <a href="#join" class="btn btn-primary" data-i18n="hero.cta1">Join now</a>
         <a href="#structure" class="btn btn-ghost" data-i18n="hero.cta2">See structure</a>
@@ -282,40 +354,24 @@
     <div class="panel">
       <div class="panel-head">
         <span>canvas-preview.rofss</span>
-        <span class="live"><span class="dot"></span>LIVE</span>
       </div>
       <div class="canvas-grid">
-        <svg width="70%" height="70%" viewBox="0 0 100 60">
-          <rect x="4" y="10" width="14" height="40" fill="#EF6404"/>
-          <rect x="22" y="10" width="14" height="40" fill="#EF6404"/>
-          <rect x="22" y="24" width="14" height="6" fill="#0C0D0F"/>
-          <rect x="42" y="10" width="14" height="40" fill="#EF6404"/>
-          <rect x="42" y="10" width="14" height="6" fill="#0C0D0F"/>
-          <rect x="42" y="27" width="14" height="6" fill="#0C0D0F"/>
-          <rect x="60" y="10" width="14" height="40" fill="#EF6404"/>
-          <rect x="60" y="10" width="14" height="6" fill="#0C0D0F"/>
-          <rect x="60" y="27" width="10" height="6" fill="#0C0D0F"/>
-          <rect x="78" y="10" width="14" height="40" fill="#EF6404"/>
-          <rect x="78" y="10" width="14" height="6" fill="#0C0D0F"/>
-          <rect x="78" y="27" width="10" height="6" fill="#0C0D0F"/>
-        </svg>
-        <div class="canvas-mock-text">sector 14 · claimed</div>
+        <canvas id="pixelCanvas" width="64" height="40"></canvas>
+        <div class="canvas-mock-text" data-i18n="hero.canvas.tag">sector 14 · shared board — click to paint</div>
+      </div>
+      <div class="board-toolbar">
+        <div class="board-palette" id="boardPalette"></div>
+        <div class="board-actions">
+          <button class="board-btn" id="boardClear" data-i18n="hero.canvas.clear">Clear</button>
+        </div>
       </div>
     </div>
   </section>
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-label" data-i18n="stats.members">Members</div>
-      <div class="stat-value">—<small data-i18n="stats.active">ACTIVE</small></div>
-    </div>
-    <div class="stat">
-      <div class="stat-label" data-i18n="stats.territory">Territory held</div>
-      <div class="stat-value">—<small data-i18n="stats.sectors">SECTORS</small></div>
-    </div>
-    <div class="stat">
       <div class="stat-label" data-i18n="stats.founded">Founded</div>
-      <div class="stat-value">2026</div>
+      <div class="stat-value">2025</div>
     </div>
     <div class="stat">
       <div class="stat-label" data-i18n="stats.region">Region</div>
@@ -330,33 +386,94 @@
     </div>
     <div class="roles">
       <div class="role">
-        <span class="role-tag" data-i18n="structure.r1.tag">COMMAND</span>
-        <h3 data-i18n="structure.r1.title">Alliance Owner</h3>
+        <span class="role-tag" data-i18n="structure.r1.tag">OWNER</span>
+        <h3>NABLJUDATEL <span style="color:var(--text-2);font-weight:600;">#5740457</span></h3>
+        <p style="font-family:var(--mono);font-size:12px;color:var(--text-2);margin-bottom:8px;">discord: @twojarish</p>
         <p data-i18n="structure.r1.body">Final authority on territory decisions, diplomacy, and admission. Sets the strategic direction.</p>
       </div>
       <div class="role">
-        <span class="role-tag" data-i18n="structure.r2.tag">COORD</span>
-        <h3 data-i18n="structure.r2.title">Sector Coordinators</h3>
-        <p data-i18n="structure.r2.body">Own a specific canvas sector. Assign templates, run shifts, escalate incidents.</p>
+        <span class="role-tag" data-i18n="structure.r2.tag">ADMIN</span>
+        <h3>Випчел <span style="color:var(--text-2);font-weight:600;">#5824260</span></h3>
+        <p style="font-family:var(--mono);font-size:12px;color:var(--text-2);margin-bottom:8px;">discord: @grtrcv</p>
+        <p data-i18n="structure.r2.body">Owns a specific canvas sector. Assigns templates, runs shifts, escalates incidents.</p>
       </div>
       <div class="role">
-        <span class="role-tag" data-i18n="structure.r3.tag">MEMBER</span>
-        <h3 data-i18n="structure.r3.title">Placers</h3>
-        <p data-i18n="structure.r3.body">Execute the template, defend assigned territory, follow shift schedules.</p>
+        <span class="role-tag" data-i18n="structure.r3.tag">MODERATOR</span>
+        <h3 data-i18n="structure.r3.title">—</h3>
+        <p data-i18n="structure.r3.body">No moderators currently. Open role.</p>
       </div>
     </div>
   </section>
 
   <section id="join" style="border-bottom:none;">
-    <div class="join">
-      <div class="join-copy">
-        <h2 data-i18n="join.title">Join ROFSS</h2>
-        <p data-i18n="join.body">ROFSS is a public alliance — anyone is welcome. Tap the button or scan the code to join on Wplace.</p>
-      </div>
-      <div class="join-action">
-        <a class="btn-join" href="https://wplace.live/join?id=019a18b6-840d-7408-8704-cfcad8d281f3" target="_blank" rel="noopener" data-i18n="join.cta">Join on Wplace →</a>
-        <div class="join-qr">
+    <div class="section-head">
+      <h2 data-i18n="join.title">Join ROFSS</h2>
+      <div class="tag" data-i18n="join.tag">public alliance</div>
+    </div>
+    <div class="join-layout">
+      <div class="invite-card">
+        <div class="invite-qr-wrap">
           <img src="assets/join-qr.png" alt="QR code to join ROFSS on Wplace">
+        </div>
+        <div class="invite-right">
+          <div>
+            <div class="invite-head">
+              <div class="channel-icon" style="background:var(--accent);">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" fill="#140900"/><rect x="14" y="3" width="7" height="7" fill="#140900"/><rect x="3" y="14" width="7" height="7" fill="#140900"/><rect x="14" y="14" width="7" height="7" fill="#140900"/></svg>
+              </div>
+              <h3>Wplace</h3>
+            </div>
+            <div class="invite-text">
+              <p data-i18n="join.body">ROFSS is a public alliance — anyone is welcome. Tap the button or scan the code to join on Wplace.</p>
+            </div>
+          </div>
+          <div class="invite-row">
+            <a class="btn-join" href="https://wplace.live/join?id=019a18b6-840d-7408-8704-cfcad8d281f3" target="_blank" rel="noopener" data-i18n="join.cta">Join on Wplace →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="invite-card">
+        <div class="invite-qr-wrap placeholder">
+          <span data-i18n="join.qr.placeholder">QR<br>coming soon</span>
+        </div>
+        <div class="invite-right">
+          <div>
+            <div class="invite-head">
+              <div class="channel-icon" style="background:#229ED9;">
+                <svg viewBox="0 0 240 240" fill="none"><circle cx="120" cy="120" r="120" fill="#229ED9"/><path d="M54 118l125-48c6-2 11 1 9 10l-21 100c-2 8-7 10-14 6l-38-28-18 17c-2 2-4 4-8 4l3-40 73-66c3-3-1-4-4-2l-90 57-39-12c-8-3-8-8 2-11z" fill="#fff"/></svg>
+              </div>
+              <h3>Telegram</h3>
+            </div>
+            <div class="invite-text">
+              <p data-i18n="join.tg.body">Announcements, sector calls and community chat. Link goes live soon.</p>
+            </div>
+          </div>
+          <div class="invite-row">
+            <a class="btn-join soon" data-i18n="join.soon">Coming soon</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="invite-card">
+        <div class="invite-qr-wrap placeholder">
+          <span data-i18n="join.qr.placeholder">QR<br>coming soon</span>
+        </div>
+        <div class="invite-right">
+          <div>
+            <div class="invite-head">
+              <div class="channel-icon" style="background:#5865F2;">
+                <svg viewBox="0 0 245 240" fill="none"><path fill="#fff" d="M104 103c-5.6 0-10 4.9-10 11 0 6 4.5 11 10 11s10-5 10-11c0-6-4.4-11-10-11zm38 0c-5.6 0-10 4.9-10 11 0 6 4.5 11 10 11s10-5 10-11c0-6-4.4-11-10-11z"/><path fill="#fff" d="M189 20H56C43 20 33 30 33 43v154c0 13 10 23 23 23h113l-5-19 13 12 12 11 22 20V43c0-13-10-23-23-23zm-31 141s-4-5-7-9c14-4 19-13 19-13-4 3-8 5-12 7-5 2-10 4-15 5-10 2-19 2-27 0-6-1-11-3-15-5-4-2-8-4-12-7 0 0 5 9 19 13-3 4-7 9-7 9-24-1-33-16-33-16 0-35 15-63 15-63 15-11 29-11 29-11l1 1c-19 5-27 14-27 14s2-1 5-3c10-4 18-6 26-6l4 1c10-1 20 1 32 6 3 1 6 2 5 3 0 0-9-9-27-14l1-1s16 0 29 11c0 0 15 28 15 63 0 0-9 15-33 16z"/></svg>
+              </div>
+              <h3>Discord</h3>
+            </div>
+            <div class="invite-text">
+              <p data-i18n="join.dc.body">Voice channels for coordinated sessions and incident response. Link goes live soon.</p>
+            </div>
+          </div>
+          <div class="invite-row">
+            <a class="btn-join soon" data-i18n="join.soon">Coming soon</a>
+          </div>
         </div>
       </div>
     </div>
@@ -364,7 +481,7 @@
 
   <footer>
     <span data-i18n="footer.copy">© 2026 ROFSS — Wplace Alliance</span>
-    <span><a href="#overview">rofss.gg</a> · <span data-i18n="footer.tag">built for scale</span></span>
+    <span><a href="#overview">rofss.github.io</a> · <span data-i18n="footer.tag">built for scale</span></span>
   </footer>
 
   <script>
@@ -376,30 +493,33 @@
         "nav.join": "Join",
         "nav.cta": "Join now",
         "hero.eyebrow": "Wplace · Alliance Registry",
-        "hero.title": "Territory is earned<br>one pixel at a time.",
-        "hero.body": "ROFSS is a coordinated pixel-placement alliance operating on Wplace. We hold territory, defend art, and organize large-scale builds through structured shifts and a strict operating standard.",
+        "hero.title": "Memes, art, and zero obligation.",
+        "hero.body": "While others wage brutal territory wars, ROFSS just draws for fun. Mutual support, joint builds, and total chill. No schedules, no shifts. Join if you're here to enjoy it, not to \"serve.\"",
         "hero.cta1": "Join now",
         "hero.cta2": "See structure",
-        "stats.members": "Members",
-        "stats.active": "ACTIVE",
-        "stats.territory": "Territory held",
-        "stats.sectors": "SECTORS",
+        "hero.canvas.tag": "sector 14 · shared board — click to paint",
+        "hero.canvas.clear": "Clear",
         "stats.founded": "Founded",
         "stats.region": "Region",
         "structure.title": "Structure",
         "structure.tag": "chain of command",
-        "structure.r1.tag": "COMMAND",
-        "structure.r1.title": "Alliance Owner",
+        "structure.r1.tag": "OWNER",
         "structure.r1.body": "Final authority on territory decisions, diplomacy, and admission. Sets the strategic direction.",
-        "structure.r2.tag": "COORD",
-        "structure.r2.title": "Sector Coordinators",
-        "structure.r2.body": "Own a specific canvas sector. Assign templates, run shifts, escalate incidents.",
-        "structure.r3.tag": "MEMBER",
-        "structure.r3.title": "Placers",
-        "structure.r3.body": "Execute the template, defend assigned territory, follow shift schedules.",
+        "structure.r2.tag": "ADMIN",
+        "structure.r2.body": "Owns a specific canvas sector. Assigns templates, runs shifts, escalates incidents.",
+        "structure.r3.tag": "MODERATOR",
+        "structure.r3.title": "—",
+        "structure.r3.body": "No moderators currently. Open role.",
         "join.title": "Join ROFSS",
+        "join.tag": "public alliance",
         "join.body": "ROFSS is a public alliance — anyone is welcome. Tap the button or scan the code to join on Wplace.",
         "join.cta": "Join on Wplace →",
+        "join.tg.title": "Telegram",
+        "join.tg.body": "Announcements, sector calls and community chat. Link goes live soon.",
+        "join.dc.title": "Discord",
+        "join.dc.body": "Voice channels for coordinated sessions and incident response. Link goes live soon.",
+        "join.soon": "Coming soon",
+        "join.qr.placeholder": "QR<br>coming soon",
         "footer.copy": "© 2026 ROFSS — Wplace Alliance",
         "footer.tag": "built for scale"
       },
@@ -410,30 +530,33 @@
         "nav.join": "Вступить",
         "nav.cta": "Вступить",
         "hero.eyebrow": "Wplace · Реестр альянсов",
-        "hero.title": "Территория зарабатывается<br>по пикселю за раз.",
-        "hero.body": "ROFSS — координированный альянс по расстановке пикселей на Wplace. Мы удерживаем территорию, защищаем арт и организуем крупные постройки через чёткие смены и строгий регламент.",
+        "hero.title": "Мемы, арты и никакой обязаловки.",
+        "hero.body": "Пока другие устраивают жёсткие войны за территории, ROFSS просто рисует в своё удовольствие. Взаимопомощь, совместные постройки и полный расслабон. Никаких графиков и дежурств. Вступай, если пришёл кайфовать, а не «служить».",
         "hero.cta1": "Вступить",
         "hero.cta2": "Структура альянса",
-        "stats.members": "Участники",
-        "stats.active": "АКТИВНЫ",
-        "stats.territory": "Территория",
-        "stats.sectors": "СЕКТОРОВ",
+        "hero.canvas.tag": "сектор 14 · общий холст — кликай, чтобы рисовать",
+        "hero.canvas.clear": "Очистить",
         "stats.founded": "Основан",
         "stats.region": "Регион",
         "structure.title": "Структура",
         "structure.tag": "цепь командования",
-        "structure.r1.tag": "КОМАНДОВАНИЕ",
-        "structure.r1.title": "Владелец альянса",
+        "structure.r1.tag": "ВЛАДЕЛЕЦ",
         "structure.r1.body": "Финальное решение по территориям, дипломатии и приёму участников. Определяет стратегию.",
-        "structure.r2.tag": "КООРД.",
-        "structure.r2.title": "Координаторы секторов",
-        "structure.r2.body": "Отвечают за конкретный сектор карты. Назначают шаблоны, ведут смены, эскалируют инциденты.",
-        "structure.r3.tag": "УЧАСТНИК",
-        "structure.r3.title": "Заливщики",
-        "structure.r3.body": "Выполняют шаблон, защищают закреплённую территорию, соблюдают расписание смен.",
+        "structure.r2.tag": "АДМИН",
+        "structure.r2.body": "Отвечает за конкретный сектор карты. Назначает шаблоны, ведёт смены, эскалирует инциденты.",
+        "structure.r3.tag": "МОДЕРАТОР",
+        "structure.r3.title": "—",
+        "structure.r3.body": "Модераторов пока нет. Роль открыта.",
         "join.title": "Вступить в ROFSS",
+        "join.tag": "открытый альянс",
         "join.body": "ROFSS — открытый альянс, вступить может любой. Нажмите кнопку или отсканируйте код, чтобы вступить на Wplace.",
         "join.cta": "Вступить через Wplace →",
+        "join.tg.title": "Telegram",
+        "join.tg.body": "Анонсы, созвоны по секторам и общий чат. Ссылка появится позже.",
+        "join.dc.title": "Discord",
+        "join.dc.body": "Голосовые каналы для совместных сессий и реагирования на инциденты. Ссылка появится позже.",
+        "join.soon": "Скоро",
+        "join.qr.placeholder": "QR-код<br>появится позже",
         "footer.copy": "© 2026 ROFSS — Альянс Wplace",
         "footer.tag": "создано для роста"
       }
@@ -459,6 +582,132 @@
     const saved = localStorage.getItem('rofss-lang');
     const initial = saved || (navigator.language && navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en');
     applyLang(initial);
+
+    // ---------- interactive pixel board (synced via Firebase Realtime Database) ----------
+    (function(){
+      const canvas = document.getElementById('pixelCanvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const COLS = 64, ROWS = 40;
+      const palette = ['#EF6404', '#F3F4F5', '#5865F2', '#22C55E', '#EAB308', '#EC4899', '#0C0D0F'];
+      let activeColor = palette[0];
+      let grid = new Array(COLS * ROWS).fill(null);
+      let painting = false;
+      let lastPaintedIndex = -1;
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCkFAvNXxJGgLVxMOTW84dZpk-yQvM8-Nw",
+        authDomain: "rofss-board.firebaseapp.com",
+        databaseURL: "https://rofss-board-default-rtdb.firebaseio.com",
+        projectId: "rofss-board",
+        storageBucket: "rofss-board.firebasestorage.app",
+        messagingSenderId: "292314735894",
+        appId: "1:292314735894:web:570ba219a93b2f7584dc37"
+      };
+
+      let db = null;
+      let boardRef = null;
+      let firebaseReady = false;
+
+      try{
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        boardRef = db.ref('board');
+        firebaseReady = true;
+      }catch(e){
+        console.warn('Firebase unavailable, board will not sync:', e);
+      }
+
+      function render(){
+        ctx.clearRect(0,0,COLS,ROWS);
+        for(let i=0;i<grid.length;i++){
+          if(grid[i]){
+            const x = i % COLS, y = Math.floor(i / COLS);
+            ctx.fillStyle = grid[i];
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+
+      function cellFromEvent(e){
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = Math.floor((clientX - rect.left) / rect.width * COLS);
+        const y = Math.floor((clientY - rect.top) / rect.height * ROWS);
+        return {x, y};
+      }
+
+      function paintAt(e){
+        const {x, y} = cellFromEvent(e);
+        if(x < 0 || y < 0 || x >= COLS || y >= ROWS) return;
+        const i = y * COLS + x;
+        if(i === lastPaintedIndex) return;
+        lastPaintedIndex = i;
+        if(grid[i] !== activeColor){
+          grid[i] = activeColor;
+          render();
+          if(firebaseReady){
+            boardRef.child(String(i)).set(activeColor);
+          }
+        }
+      }
+
+      canvas.addEventListener('mousedown', e => { painting = true; lastPaintedIndex = -1; paintAt(e); });
+      canvas.addEventListener('mousemove', e => { if(painting) paintAt(e); });
+      window.addEventListener('mouseup', () => { painting = false; });
+      canvas.addEventListener('touchstart', e => { painting = true; lastPaintedIndex = -1; paintAt(e); e.preventDefault(); }, {passive:false});
+      canvas.addEventListener('touchmove', e => { if(painting) paintAt(e); e.preventDefault(); }, {passive:false});
+      window.addEventListener('touchend', () => { painting = false; });
+
+      const paletteEl = document.getElementById('boardPalette');
+      palette.forEach((color, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'board-swatch' + (idx === 0 ? ' active' : '');
+        btn.style.background = color;
+        btn.title = color;
+        btn.addEventListener('click', () => {
+          activeColor = color;
+          document.querySelectorAll('.board-swatch').forEach(s => s.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        paletteEl.appendChild(btn);
+      });
+
+      const clearBtn = document.getElementById('boardClear');
+      clearBtn.addEventListener('click', () => {
+        grid = new Array(COLS * ROWS).fill(null);
+        render();
+        if(firebaseReady) boardRef.set(null);
+      });
+
+      if(firebaseReady){
+        // Load full board once on connect, then listen for individual pixel changes
+        boardRef.once('value').then(snap => {
+          const data = snap.val() || {};
+          Object.keys(data).forEach(key => {
+            const i = parseInt(key, 10);
+            if(!isNaN(i) && i >= 0 && i < grid.length) grid[i] = data[key];
+          });
+          render();
+        });
+        boardRef.on('child_added', snap => {
+          const i = parseInt(snap.key, 10);
+          if(!isNaN(i) && i >= 0 && i < grid.length){ grid[i] = snap.val(); render(); }
+        });
+        boardRef.on('child_changed', snap => {
+          const i = parseInt(snap.key, 10);
+          if(!isNaN(i) && i >= 0 && i < grid.length){ grid[i] = snap.val(); render(); }
+        });
+        boardRef.on('child_removed', snap => {
+          const i = parseInt(snap.key, 10);
+          if(!isNaN(i) && i >= 0 && i < grid.length){ grid[i] = null; render(); }
+        });
+      } else {
+        render();
+      }
+    })();
   </script>
 
 </body>
